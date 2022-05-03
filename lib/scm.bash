@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-source "$BASH_IT/themes/gaudi/lib/helpers/git.helpers.bash"
-source "$BASH_IT/themes/gaudi/lib/helpers/hg.helpers.bash"
-source "$BASH_IT/themes/gaudi/lib/helpers/p4.helpers.bash"
-source "$BASH_IT/themes/gaudi/lib/helpers/svn.helpers.bash"
+source "${GAUDI_BASH}/components/themes/gaudi/lib/helpers/git.helpers.bash"
+source "${GAUDI_BASH}/components/themes/gaudi/lib/helpers/hg.helpers.bash"
+source "${GAUDI_BASH}/components/themes/gaudi/lib/helpers/p4.helpers.bash"
+source "${GAUDI_BASH}/components/themes/gaudi/lib/helpers/svn.helpers.bash"
 
 SCM_CHECK=${SCM_CHECK:=true}
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 GAUDI_FIRST_RUN=${GAUDI_FIRST_RUN:=true}
-GAUDI_ROOT="${HOME}/.bash_it/themes/gaudi"
+GAUDI_ROOT="${GAUDI_BASH}/components/themes/gaudi"
 
 source "$GAUDI_ROOT/gaudi.configs.bash"
 source "$GAUDI_ROOT/lib/utils.bash"
