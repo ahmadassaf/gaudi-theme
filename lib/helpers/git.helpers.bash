@@ -3,118 +3,148 @@
 GAUDI_SCM_GIT_SHOW_DETAILS=${GAUDI_SCM_GIT_SHOW_DETAILS:=true}
 GAUDI_SCM_GIT_SHOW_REMOTE_INFO=${GAUDI_SCM_GIT_SHOW_REMOTE_INFO:=auto}
 GAUDI_SCM_GIT_IGNORE_UNTRACKED=${GAUDI_SCM_GIT_IGNORE_UNTRACKED:=false}
+GAUDI_SCM_GIT_IGNORE_SUBMODULES=${GAUDI_SCM_GIT_IGNORE_SUBMODULES:=true}
 GAUDI_SCM_GIT_SHOW_CURRENT_USER=${GAUDI_SCM_GIT_SHOW_CURRENT_USER:=false}
 GAUDI_SCM_GIT_SHOW_COMMIT_SHA=${GAUDI_SCM_GIT_SHOW_COMMIT_SHA:=false}
+GAUDI_SCM_GIT_GITSTATUS_RAN=${GAUDI_SCM_GIT_GITSTATUS_RAN:=false}
 
 GAUDI_SCM_GIT='git'
 GAUDI_SCM_GIT_CHAR='\ue727'
 GAUDI_SCM_GIT_USER_CHAR='\uf7a3'
 GAUDI_SCM_GIT_AHEAD_CHAR="⇡ "
 GAUDI_SCM_GIT_BEHIND_CHAR="⇣ "
+GAUDI_SCM_THEME_TAG_PREFIX='tag:'
+GAUDI_SCM_THEME_DETACHED_PREFIX='⌿'
 GAUDI_SCM_GIT_UNTRACKED_CHAR="?:"
-GAUDI_SCM_GIT_UNSTAGED_CHAR="U:"
+GAUDI_SCM_GIT_CHANGED_CHAR="U:"
+GAUDI_SCM_GIT_CONFLICT_CHAR="C:"
 GAUDI_SCM_GIT_STAGED_CHAR="S:"
 GAUDI_SCM_GIT_STASH_CHAR='\uf5e1'
 GAUDI_SCM_GIT_SHA_CHAR='\uf417'
 
-_git-symbolic-ref () {
- git symbolic-ref -q HEAD 2> /dev/null
+function _git-symbolic-ref() {
+	git symbolic-ref -q HEAD 2> /dev/null
 }
 
-# When on a branch, this is often the same as _git-commit-description,
-# but this can be different when two branches are pointing to the
-# same commit. _git-branch is used to explicitly choose the checked-out
-# branch.
-_git-branch () {
- git symbolic-ref -q --short HEAD 2> /dev/null || return 1
+# When on a branch, this is often the same as _git-commit-description, but this can be different when two branches are pointing to the same commit. _git-branch is used to explicitly choose the checked-out branch.
+function _git-branch() {
+	if [[ "${GAUDI_SCM_GIT_GITSTATUS_RAN:-}" == "true" ]]; then
+		if [[ -n "${VCS_STATUS_LOCAL_BRANCH:-}" ]]; then
+			echo "${VCS_STATUS_LOCAL_BRANCH}"
+		else
+			return 1
+		fi
+	else
+		git symbolic-ref -q --short HEAD 2> /dev/null || return 1
+	fi
 }
 
-_git-tag () {
-  git describe --tags --exact-match 2> /dev/null
+function _git-tag() {
+	if [[ "${GAUDI_SCM_GIT_GITSTATUS_RAN:-}" == "true" ]]; then
+		if [[ -n "${VCS_STATUS_TAG:-}" ]]; then
+			echo "${VCS_STATUS_TAG}"
+		fi
+	else
+		git describe --tags --exact-match 2> /dev/null
+	fi
 }
 
-_git-commit-description () {
-  git describe --contains --all 2> /dev/null
+function _git-commit-description() {
+	git describe --contains --all 2> /dev/null
 }
 
-_git-short-sha () {
-  git rev-parse --short HEAD
+function _git-short-sha() {
+	if [[ "${GAUDI_SCM_GIT_GITSTATUS_RAN:-}" == "true" ]]; then
+		echo "${VCS_STATUS_COMMIT:0:7}"
+	else
+		git rev-parse --short HEAD
+	fi
 }
 
 # Try the checked-out branch first to avoid collision with branches pointing to the same ref.
-_git-friendly-ref () {
-  _git-branch || _git-tag || _git-commit-description || _git-short-sha
+function _git-friendly-ref() {
+	if [[ "${GAUDI_SCM_GIT_GITSTATUS_RAN:-}" == "true" ]]; then
+		_git-branch || _git-tag || _git-short-sha # there is no tag based describe output in gitstatus
+	else
+		_git-branch || _git-tag || _git-commit-description || _git-short-sha
+	fi
 }
 
-_git-num-remotes () {
-  git remote | wc -l
+function _git-num-remotes() {
+	git remote | wc -l
 }
 
-_git-upstream () {
-  local ref
-  ref="$(_git-symbolic-ref)" || return 1
-  git for-each-ref --format="%(upstream:short)" "${ref}"
+function _git-upstream() {
+	local ref
+	ref="$(_git-symbolic-ref)" || return 1
+	git for-each-ref --format="%(upstream:short)" "${ref}"
 }
 
-_git-upstream-remote () {
-  local upstream
-  upstream="$(_git-upstream)" || return 1
+function _git-upstream-remote() {
+	local upstream branch
+	upstream="$(_git-upstream)" || return 1
 
-  local branch
-  branch="$(_git-upstream-branch)" || return 1
-  echo -e -n "${upstream%"/${branch}"}"
+	branch="$(_git-upstream-branch)" || return 1
+	echo "${upstream%"/${branch}"}"
 }
 
-_git-upstream-branch () {
-  local ref
-  ref="$(_git-symbolic-ref)" || return 1
+function _git-upstream-branch() {
+	local ref
+	ref="$(_git-symbolic-ref)" || return 1
 
-  # git versions < 2.13.0 do not support "strip" for upstream format
-  # regex replacement gives the wrong result for any remotes with slashes in the name,
-  # so only use when the strip format fails.
-  git for-each-ref --format="%(upstream:strip=3)" "${ref}" 2> /dev/null || git for-each-ref --format="%(upstream)" "${ref}" | sed -e "s/.*\/.*\/.*\///"
+	# git versions < 2.13.0 do not support "strip" for upstream format
+	# regex replacement gives the wrong result for any remotes with slashes in the name, so only use when the strip format fails.
+	git for-each-ref --format="%(upstream:strip=3)" "${ref}" 2> /dev/null || git for-each-ref --format="%(upstream)" "${ref}" | sed -e "s/.*\/.*\/.*\///"
 }
 
-_git-upstream-behind-ahead () {
-  git rev-list --left-right --count "$(_git-upstream)...HEAD" 2> /dev/null
+function _git-upstream-behind-ahead() {
+	git rev-list --left-right --count "$(_git-upstream)...HEAD" 2> /dev/null
 }
 
-_git-upstream-branch-gone () {
-  [[ "$(git status -s -b | sed -e 's/.* //')" == "[gone]" ]]
-}
-
-_git-hide-status () {
-  [[ "$(git config --get bash-it.hide-status)" == "1" ]]
+function _git-upstream-branch-gone() {
+	[[ "$(git status -s -b | sed -e 's/.* //')" == "[gone]" ]]
 }
 
 _git-status () {
   local git_status_flags=
   [[ "${GAUDI_SCM_GIT_IGNORE_UNTRACKED}" = "true" ]] && git_status_flags='-uno'
-  git status --porcelain ${git_status_flags} 2> /dev/null
+  if [[ "${GAUDI_SCM_GIT_IGNORE_SUBMODULES}" == "" ]]; then
+    _ignore_submodules="--ignore-submodules"
+  else
+    _ignore_submodules=""
+  fi
+  LC_ALL=C git status "${_ignore_submodules}" --untracked-files="${git_status_flags:-normal}" --porcelain --branch
 }
 
 _git-status-counts () {
-  _git-status | awk '
-  BEGIN {
-    untracked=0;
-    unstaged=0;
-    staged=0;
-  }
-  {
-    if ($0 ~ /^\?\? .+/) {
-      untracked += 1
-    } else {
-      if ($0 ~ /^.[^ ]] .+/) {
-        unstaged += 1
-      }
-      if ($0 ~ /^[^ ]]. .+/) {
-        staged += 1
-      }
-    }
-  }
-  END {
-    print untracked "\t" unstaged "\t" staged
-  }'
+
+num_staged=0
+num_changed=0
+num_conflicts=0
+num_untracked=0
+
+IFS="^" read -ra branch_fields <<< "${branch_line/\#\# }"
+branch="${branch_fields[0]}"
+
+while IFS='' read -r line || [[ -n "${line}" ]]; do
+  status="${line:0:2}"
+  while [[ -n ${status} ]]; do
+    case "${status}" in
+      \#\#) branch_line="${line/\.\.\./^}"; break ;;
+      \?\?) ((num_untracked++)); break ;;
+      U?) ((num_conflicts++)); break;;
+      ?U) ((num_conflicts++)); break;;
+      DD) ((num_conflicts++)); break;;
+      AA) ((num_conflicts++)); break;;
+      ?M) ((num_changed++)) ;;
+      ?D) ((num_changed++)) ;;
+      ?\ ) ;;
+      U) ((num_conflicts++)) ;;
+      \ ) ;;
+    esac
+    status="${status:0:(${#status}-1)}"
+  done
+done <<< "${_git-status}"
 }
 
 _git-remote-info () {
@@ -137,38 +167,6 @@ _git-remote-info () {
   fi
 }
 
-# Unused by bash-it, present for API compatibility
-git_status_summary () {
-  awk '
-  BEGIN {
-    untracked=0;
-    unstaged=0;
-    staged=0;
-  }
-  {
-    if (!after_first && $0 ~ /^##.+/) {
-      print $0
-      seen_header = 1
-    } else if ($0 ~ /^\?\? .+/) {
-      untracked += 1
-    } else {
-      if ($0 ~ /^.[^ ]] .+/) {
-        unstaged += 1
-      }
-      if ($0 ~ /^[^ ]]. .+/) {
-        staged += 1
-      }
-    }
-    after_first = 1
-  }
-  END {
-    if (!seen_header) {
-      print
-    }
-    print untracked "\t" unstaged "\t" staged
-  }'
-}
-
 git_user_info () {
   # support two or more initials, set by 'git pair' plugin
   GAUDI_SCM_CURRENT_USER=$(git config user.initials | sed 's% %+%')
@@ -177,33 +175,21 @@ git_user_info () {
   [[ -n "${GAUDI_SCM_CURRENT_USER}" ]] && printf "%b" "$GAUDI_SCM_GIT_USER_CHAR $GAUDI_SCM_CURRENT_USER"
 }
 
-git_prompt_minimal_info () {
-
-  GAUDI_SCM_STATE=${GAUDI_SCM_THEME_PROMPT_CLEAN}
-
-  _git-hide-status && return
-
-  GAUDI_SCM_BRANCH="$(_git-friendly-ref)"
-
-  if [[ -n "$(_git-status | tail -n1)" ]]; then
-    GAUDI_SCM_DIRTY=1
-    GAUDI_SCM_STATE=${GAUDI_SCM_THEME_PROMPT_DIRTY}
-  fi
-
-  # Output the git prompt
-  echo -e -n "${GAUDI_SCM_BRANCH}${GAUDI_SCM_STATE}"
-}
-
 git_prompt_vars () {
+
   # Make sure we do a fetch to get all the information needed form the upstream
   [[ $GAUDI_SCM_FETCH == true ]] && git fetch &> /dev/null;
 
   if _git-branch &> /dev/null; then
-    GAUDI_SCM_GIT_DETACHED="false"
     GAUDI_SCM_BRANCH="$(_git-friendly-ref)$(_git-remote-info)"
   else
-    GAUDI_SCM_GIT_DETACHED="true"
-    GAUDI_SCM_BRANCH="$(_git-friendly-ref)"
+  	local detached_prefix
+		if _git-tag &> /dev/null; then
+			detached_prefix="${GAUDI_SCM_THEME_TAG_PREFIX}"
+		else
+			detached_prefix="${GAUDI_SCM_THEME_DETACHED_PREFIX}"
+		fi
+		GAUDI_SCM_BRANCH="${detached_prefix}$(_git-friendly-ref)"
   fi
 
   IFS=$'\t' read -r commits_behind commits_ahead <<< "$(_git-upstream-behind-ahead)"
@@ -215,18 +201,20 @@ git_prompt_vars () {
   [[ "${stash_count}" -gt 0 ]] && GAUDI_SCM_BRANCH+=" ${GAUDI_SCM_GIT_STASH_CHAR} ${stash_count}"
 
   GAUDI_SCM_STATE=${GIT_THEME_PROMPT_CLEAN:-$GAUDI_SCM_THEME_PROMPT_CLEAN}
-  if ! _git-hide-status; then
-    IFS=$'\t' read -r untracked_count unstaged_count staged_count <<< "$(_git-status-counts)"
-    if [[ "${untracked_count}" -gt 0 || "${unstaged_count}" -gt 0 || "${staged_count}" -gt 0 ]]; then
-      GAUDI_SCM_DIRTY=1
-      if [[ "${GAUDI_SCM_GIT_SHOW_DETAILS}" = "true" ]]; then
-        [[ "${staged_count}" -gt 0 ]] && GAUDI_SCM_BRANCH+=" ${GAUDI_SCM_GIT_STAGED_CHAR}${staged_count}" && GAUDI_SCM_DIRTY=3
-        [[ "${unstaged_count}" -gt 0 ]] && GAUDI_SCM_BRANCH+=" ${GAUDI_SCM_GIT_UNSTAGED_CHAR}${unstaged_count}" && GAUDI_SCM_DIRTY=2
-        [[ "${untracked_count}" -gt 0 ]] && GAUDI_SCM_BRANCH+=" ${GAUDI_SCM_GIT_UNTRACKED_CHAR}${untracked_count}" && GAUDI_SCM_DIRTY=1
-      fi
-      GAUDI_SCM_STATE=${GIT_THEME_PROMPT_DIRTY:-$GAUDI_SCM_THEME_PROMPT_DIRTY}
+  
+  _git-status-counts
+  
+  if [[ "${num_staged}" -gt 0 || "${num_changed}" -gt 0 || "${num_untracked}" -gt 0 || "${num_conflicts}" -gt 0 ]]; then
+    GAUDI_SCM_DIRTY=1
+    if [[ "${GAUDI_SCM_GIT_SHOW_DETAILS}" = "true" ]]; then
+      [[ "${num_staged}" -gt 0 ]] && GAUDI_SCM_BRANCH+=" ${GAUDI_SCM_GIT_STAGED_CHAR}${num_staged}" && GAUDI_SCM_DIRTY=3
+      [[ "${num_changed}" -gt 0 ]] && GAUDI_SCM_BRANCH+=" ${GAUDI_SCM_GIT_CHANGED_CHAR}${num_changed}" && GAUDI_SCM_DIRTY=2
+      [[ "${num_untracked}" -gt 0 ]] && GAUDI_SCM_BRANCH+=" ${GAUDI_SCM_GIT_UNTRACKED_CHAR}${num_untracked}" && GAUDI_SCM_DIRTY=1
+      [[ "${num_conflicts}" -gt 0 ]] && GAUDI_SCM_BRANCH+=" ${GAUDI_SCM_GIT_CONFLICT_CHAR}${num_conflicts}" && GAUDI_SCM_DIRTY=1
     fi
+    GAUDI_SCM_STATE=${GIT_THEME_PROMPT_DIRTY:-$GAUDI_SCM_THEME_PROMPT_DIRTY}
   fi
+  
 
   if [[ "${GAUDI_SCM_GIT_SHOW_COMMIT_SHA}" == true ]]; then
     GAUDI_SCM_BRANCH+=$(echo -e -n " ${GAUDI_SCM_GIT_SHA_CHAR} $(_git-short-sha)")
@@ -236,3 +224,9 @@ git_prompt_vars () {
 
   GAUDI_SCM_CHANGE=$(_git-short-sha 2>/dev/null || echo "")
 }
+
+export GAUDI_SCM_STATE
+export GAUDI_SCM_DIRTY
+export GAUDI_SCM_CHANGE
+export GAUDI_SCM_GIT
+export GAUDI_SCM_GIT_CHAR

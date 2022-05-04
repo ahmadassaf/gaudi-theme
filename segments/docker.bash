@@ -27,7 +27,7 @@ gaudi_docker () {
   gaudi::exists docker || return
 
   # Better support for docker environment vars: https://docs.docker.com/compose/reference/envvars/
-  local compose_exists=false
+  local compose_exists=false docker_version
   if [[ -n "$COMPOSE_FILE" ]]; then
     # Use COMPOSE_PATH_SEPARATOR or colon as default
     local separator=${COMPOSE_PATH_SEPARATOR:-":"}
@@ -48,12 +48,12 @@ gaudi_docker () {
   fi
 
   # Show Docker status only for Docker-specific folders
-  [[ "$compose_exists" == true || -f Dockerfile || -f docker-compose.yml ||
+  [[ "$compose_exists" == true || -f Dockerfile || -f docker-compose.yml || -f /.dockerenv ||
      -n $(find . -not -path '*/\.*' -maxdepth 1 -name "*.Dockerfile")
   ]] || return
 
   # if docker daemon isn't running you'll get an error saying it can't connect
-  local docker_version=$(docker version -f "{{.Server.Version}}" 2>/dev/null | cut -f1 -d"-")
+  docker_version=$(docker version -f "{{.Server.Version}}" 2>/dev/null | cut -f1 -d"-")
   [[ -z $docker_version ]] && return
 
   if [[ -n $DOCKER_MACHINE_NAME ]]; then

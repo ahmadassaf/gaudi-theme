@@ -25,16 +25,15 @@ GAUDI_CWD_SEPARATOR="${GAUDI_CWD_SEPARATOR=""}"
 gaudi_cwd () {
   [[ $GAUDI_CWD_SHOW == false ]] && return
 
-  [[ x"$whoami" != *'('* || x"$whoami" = *'(:'* || x"$whoami" = *'(tmux'* ]] && color=$GAUDI_CWD_COLOR
   [[ -w $PWD ]] && color=$GAUDI_CWD_COLOR || color=$GAUDI_CWD_COLOR_LOCKED
 
-  GAUDI_REDuce-path () {
-    local path=${1-$PWD} target=${2-33} IFS=/
-    [[ "$path" =~ ^$HOME(/|$) ]] && path="~${path#$HOME}"
+  gaudi_reduce_path () {
+    local path=${1-$PWD} target=${2-33} IFS=/ order
+    [[ "$path" =~ ^$HOME(/|$) ]] && path="~${path#"$HOME"}"
     [[ ${#path} -le $target ]] && echo "$path" && return
-    local order=$((i=0; for e in $path; do echo ${#e} $i; ((i++)); done) |
-        head -n-1 | sort -rn | cut -d " " -f 2)
-    local elements=($path)
+    order=$( (i=0; for e in $path; do echo ${#e} $i; ((i++)); done ) |
+        tail -n 1 | sort -rn | cut -d " " -f 2)
+    local elements=("$path")
     IFS=$'\n'
     for i in $order; do
         elements[i]=${elements[i]:0:1}
@@ -45,7 +44,7 @@ gaudi_cwd () {
     echo "${path:0:target/2}~${path: -target/2}"
   }
 
-  [[ $GAUDI_CWD_SHORTEN == true ]] && GAUDI_CWD=$(GAUDI_REDuce-path) || GAUDI_CWD=$(pwd | sed "s|^${HOME}|~|")
+  [[ $GAUDI_CWD_SHORTEN == true ]] && GAUDI_CWD=$(gaudi_reduce_path "$PWD") || GAUDI_CWD=$(pwd | sed "s|^${HOME}|~|")
   [[ $GAUDI_CWD_SUMMARY == true ]] && GAUDI_CWD+=" [$(ls -1 | wc -l | sed 's: ::g') Files, $(ls -lah | grep -m 1 total | sed 's/total //')]"
 
   gaudi::section \
