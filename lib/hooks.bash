@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 GAUDI_HOOKS=(
-    elapsed # Last command runtime
+    # elapsed # Last command runtime
 )
 
 if [[ -n "${GAUDI_HOOKS}" ]]; then
