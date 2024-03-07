@@ -31,7 +31,8 @@ gaudi_golang () {
 
   gaudi::exists go || return
 
-  local go_version=$(go version | awk '{print substr($3, 3)}' )
+  local go_version
+  go_version=$(go version | awk '{ if ($3 ~ /^devel/) {print $3 ":" substr($4, 2)} else {print "v" substr($3, 3)} }' )
 
   gaudi::section \
     "$GAUDI_GOLANG_COLOR" \

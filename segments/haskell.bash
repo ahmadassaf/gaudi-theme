@@ -13,7 +13,7 @@ GAUDI_HASKELL_SHOW="${GAUDI_HASKELL_SHOW=true}"
 GAUDI_HASKELL_PREFIX="${GAUDI_HASKELL_PREFIX="$GAUDI_PROMPT_DEFAULT_PREFIX"}"
 GAUDI_HASKELL_SUFFIX="${GAUDI_HASKELL_SUFFIX="$GAUDI_PROMPT_DEFAULT_PREFIX"}"
 GAUDI_HASKELL_SYMBOL="${GAUDI_HASKELL_SYMBOL="\\ue61f"}"
-GAUDI_HASKELL_COLOR="${GAUDI_HASKELL_COLOR=""$GAUDI_MAGENTA""}"
+GAUDI_HASKELL_COLOR="${GAUDI_HASKELL_COLOR="$GAUDI_YELLOW"}"
 
 # ------------------------------------------------------------------------------
 # Section
@@ -24,12 +24,13 @@ gaudi_haskell () {
   [[ $GAUDI_HASKELL_SHOW == false ]] && return
 
   # If there are stack files in current directory
-  [[ -f stack.yaml ]] || return
+  [[ -f stack.yaml || -f stack.yml ]] || return
 
   # The command is stack, so do not change this to haskell.
   gaudi::exists stack || return
 
-  local haskell_version=$(stack ghc -- --numeric-version --no-install-ghc)
+  local haskell_version
+  haskell_version=$(stack ghc -- --numeric-version --no-install-ghc)
 
   gaudi::section \
     "$GAUDI_HASKELL_COLOR" \

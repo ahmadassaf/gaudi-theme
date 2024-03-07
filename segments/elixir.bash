@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2153
 #
 # Elixir
 #
@@ -44,7 +45,7 @@ gaudi_elixir () {
   fi
 
   [[ $elixir_version == "system" ]] && return
-  [[ $elixir_version == $GAUDI_ELIXIR_DEFAULT_VERSION ]] && return
+  [[ $elixir_version == "$GAUDI_ELIXIR_DEFAULT_VERSION" ]] && return
 
   # Add 'v' before elixir version that starts with a number
   [[ "${elixir_version}" =~ ^[0-9].+$ ]] && elixir_version="v${elixir_version}"

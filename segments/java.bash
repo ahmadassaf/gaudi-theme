@@ -23,8 +23,9 @@ GAUDI_JAVA_COLOR="${GAUDI_JAVA_COLOR="$GAUDI_ORANGE"}"
 gaudi_java () {
   [[ $GAUDI_JAVA_SHOW == false ]] && return
 
+
 	# Show only if .java or .jar exist in current directory
-  [[ -f pom.xml || -f build.gradle || -f build.gradle.kts ||
+  [[ -f pom.xml || -f build.gradle || -f build.gradle.kts || -f settings.gradle ||
 	   -n $(find . -not -path '*/\.*' -maxdepth 1 -name "*.java") ||
 	   -n $(find . -not -path '*/\.*' -maxdepth 1 -name "*.jar")
  ]] || return
@@ -40,6 +41,8 @@ gaudi_java () {
 	else
 		return
 	fi
+
+	[[ -z "$java_version" ]] && return
 
   gaudi::section \
     "$GAUDI_JAVA_COLOR" \

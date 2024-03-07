@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# shellcheck shell=bash
+# shellcheck disable=SC2010
+
 #
 # Working directory
 #
@@ -29,6 +32,7 @@ gaudi_cwd () {
 
   gaudi_reduce_path () {
     local path=${1-$PWD} target=${2-33} IFS=/ order
+    [[ $path == "/" ]] && echo "⚠ ROOT" && return
     [[ "$path" =~ ^$HOME(/|$) ]] && path="~${path#"$HOME"}"
     [[ ${#path} -le $target ]] && echo "$path" && return
     order=$( (i=0; for e in $path; do echo ${#e} $i; ((i++)); done ) |

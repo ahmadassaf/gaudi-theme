@@ -28,7 +28,8 @@ gaudi_julia () {
 
   gaudi::exists julia || return
 
-  local julia_version=$(julia --version | grep --color=never -oE '[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]')
+  local julia_version
+  julia_version=$(julia --version | grep --color=never -oE '[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]')
 
   gaudi::section \
     "$GAUDI_JULIA_COLOR" \

@@ -12,7 +12,7 @@
 GAUDI_RUBY_SHOW="${GAUDI_RUBY_SHOW=true}"
 GAUDI_RUBY_PREFIX="${GAUDI_RUBY_PREFIX="$GAUDI_PROMPT_DEFAULT_PREFIX"}"
 GAUDI_RUBY_SUFFIX="${GAUDI_RUBY_SUFFIX="$GAUDI_PROMPT_DEFAULT_SUFFIX"}"
-GAUDI_RUBY_SYMBOL="${GAUDI_RUBY_SYMBOL="\\uf43b "}"
+GAUDI_RUBY_SYMBOL="${GAUDI_RUBY_SYMBOL="\\uf43b"}"
 GAUDI_RUBY_COLOR="${GAUDI_RUBY_COLOR="$GAUDI_RED"}"
 
 # ------------------------------------------------------------------------------
@@ -31,17 +31,7 @@ gaudi_ruby () {
 
   local 'ruby_version'
 
-  if gaudi::exists rvm-prompt; then
-    ruby_version=$(rvm-prompt i v g)
-  elif gaudi::exists chruby; then
-    ruby_version=$(chruby | sed -n -e 's/ \* //p')
-  elif gaudi::exists rbenv; then
-    ruby_version=$(rbenv version-name)
-  elif gaudi::exists asdf; then
-    ruby_version=$(asdf current ruby | awk '{print $1}')
-  else
-    return
-  fi
+ ruby_version=$(ruby -v 2>/dev/null | grep "ruby" --color=never | cut -d ' ' -f 2 | cut -c1-5)
 
   [[ -z $ruby_version || "${ruby_version}" == "system" ]] && return
 

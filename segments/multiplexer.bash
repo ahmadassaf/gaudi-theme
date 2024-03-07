@@ -14,7 +14,7 @@
 GAUDI_MULTIPLEXER_SHOW="${GAUDI_MULTIPLEXER_SHOW=true}"
 GAUDI_MULTIPLEXER_PREFIX="${GAUDI_MULTIPLEXER_PREFIX="$GAUDI_PROMPT_DEFAULT_PREFIX"}"
 GAUDI_MULTIPLEXER_SUFFIX="${GAUDI_MULTIPLEXER_SUFFIX="$GAUDI_PROMPT_DEFAULT_SUFFIX"}"
-GAUDI_MULTIPLEXER_SYMBOL="\\uf878"
+GAUDI_MULTIPLEXER_SYMBOL="✜"
 GAUDI_MULTIPLEXER_COLOR="${GAUDI_MULTIPLEXER_COLOR=""}"
 
 # ------------------------------------------------------------------------------
@@ -35,8 +35,8 @@ gaudi_multiplexer () {
 
   [[ $detached_tmux_sessions == 0 ]] && [[ $detached_screen_sessions == 0 ]] && return
 
-  [[ $detached_tmux_sessions != 0 ]] && multiplexers=" T:$detached_tmux_sessions"
-  [[ $detached_screen_sessions != 0 ]] && multiplexers="$multiplexers S:$detached_screen_sessions"
+  [[ $detached_tmux_sessions != 0 ]] && multiplexers=" tmux:$detached_tmux_sessions"
+  [[ $detached_screen_sessions != 0 ]] && multiplexers="$multiplexers screen:$detached_screen_sessions"
 
   gaudi::section \
     "$GAUDI_MULTIPLEXER_COLOR" \

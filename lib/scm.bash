@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# shellcheck shell=bash
+# shellcheck disable=SC2034,SC1091,SC2053
 
 source "${GAUDI_BASH}/components/themes/gaudi/lib/helpers/git.helpers.bash"
 source "${GAUDI_BASH}/components/themes/gaudi/lib/helpers/hg.helpers.bash"
@@ -9,7 +11,7 @@ SCM_CHECK=${SCM_CHECK:=true}
 
 GAUDI_SCM_THEME_PROMPT_DIRTY=' ✕'
 GAUDI_SCM_THEME_PROMPT_CLEAN=' ✓'
-GAUDI_SCM_THEME_BRANCH_PREFIX=''
+GAUDI_SCM_THEME_BRANCH_PREFIX="\\ueafc"
 GAUDI_SCM_THEME_TAG_PREFIX='tag:'
 GAUDI_SCM_THEME_DETACHED_PREFIX='detached:'
 GAUDI_SCM_THEME_BRANCH_TRACK_PREFIX=' → '

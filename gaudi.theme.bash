@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1091,SC2034
 
 GAUDI_FIRST_RUN=${GAUDI_FIRST_RUN:=true}
 GAUDI_ROOT="${GAUDI_BASH}/components/themes/gaudi"
@@ -7,7 +8,6 @@ source "$GAUDI_ROOT/gaudi.configs.bash"
 source "$GAUDI_ROOT/lib/utils.bash"
 source "$GAUDI_ROOT/lib/colors.bash"
 source "$GAUDI_ROOT/lib/scm.bash"
-source "$GAUDI_ROOT/lib/hooks.bash"
 
 # Do not load if not an interactive shell
 # Reference: https://github.com/nojhan/liquidprompt/issues/161
@@ -25,7 +25,6 @@ fi
 
 gaudi::prompt () {
 
-  # Must be captuGAUDI_RED before any other command in prompt is executed
   # Must be the very first line in all entry prompt functions, or the value
   # will be overridden by a different command execution - do not move this line!
   RETVAL=$?
@@ -47,15 +46,12 @@ gaudi::prompt () {
   # other than the current working directory $PWD
   gaudi::kill_outdated_asyncRender
 
-  # Source the prompt char configuration
-  source "$GAUDI_ROOT/segments/char.bash"
-
   local PROMPT_CHAR
   local COMPENSATE
   local LEFT_PROMPT
   local RIGHT_PROMPT
 
-  PROMPT_CHAR="$(gaudi_char)"
+  PROMPT_CHAR="${GREEN}>>${NC} "
   COMPENSATE=58
 
   LEFT_PROMPT="$(gaudi::render_prompt GAUDI_PROMPT_LEFT[@])"
@@ -70,7 +66,7 @@ gaudi::prompt () {
       COMPENSATE=45
     fi
     [[ $GAUDI_SPLIT_PROMPT_TWO_LINES == true ]] && line_separator="\n" || line_separator="\r"
-    PS1=$(printf "\n%*b%s%b\n\n%b" "$(($(tput cols) + $COMPENSATE))" "$RIGHT_PROMPT" "$line_separator" "$LEFT_PROMPT" "$PROMPT_CHAR")
+    PS1=$(printf "\n%*b%s%b\n\n%b" "$(($(tput cols) + "$COMPENSATE"))" "$RIGHT_PROMPT" "$line_separator" "$LEFT_PROMPT" "$PROMPT_CHAR")
   fi;
 
   # Render the async part of the prompt .. lazy lazy

@@ -26,20 +26,24 @@ gaudi_kubecontext () {
 
   gaudi::exists kubectl || return
 
-  local kube_context="$(kubectl config current-context 2>/dev/null)"
+  local kube_context kube_namespace kubectl_version
 
-  local kube_namespace=$(kubectl config view -o jsonpath="{.contexts[?(@.name == \"${kube_context}\")].context.namespace}")
+  kube_context=$(kubectl config current-context 2>/dev/null)
+  kube_namespace=$(kubectl config view --minify --output 'jsonpath={..namespace}' 2>/dev/null)
+  kubectl_version=$(kubectl version --short 2>/dev/null | grep "Server Version" | sed 's/Server Version: \(.*\)/\1/')
+
+  [[ -n $kube_namespace && "$kube_namespace" != "default" ]] && kube_context="$kube_context ($kube_namespace)"
 
   if [[ -z $kube_namespace ]]; then
     kube_namespace="default"
   fi
 
-  [[ -z $kube_context ]] && return
+  [[ -z $kubectl_version && -z $kubectl_context ]] && return
 
   gaudi::section \
     "$GAUDI_KUBECONTEXT_COLOR" \
     "$GAUDI_KUBECONTEXT_PREFIX" \
     "$GAUDI_KUBECONTEXT_SYMBOL" \
-    "$kube_context | $kube_namespace" \
+    "$kubectl_version | $kube_context | $kube_namespace" \
     "$GAUDI_KUBECONTEXT_SUFFIX"
 }

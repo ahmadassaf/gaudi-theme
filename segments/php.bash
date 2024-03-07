@@ -12,8 +12,8 @@
 GAUDI_PHP_SHOW="${GAUDI_PHP_SHOW=true}"
 GAUDI_PHP_PREFIX="${GAUDI_PHP_PREFIX="$GAUDI_PROMPT_DEFAULT_PREFIX"}"
 GAUDI_PHP_SUFFIX="${GAUDI_PHP_SUFFIX="$GAUDI_PROMPT_DEFAULT_SUFFIX"}"
-GAUDI_PHP_SYMBOL="${GAUDI_PHP_SYMBOL="\\ue73d"}"
-GAUDI_PHP_COLOR="${GAUDI_PHP_COLOR=""}"
+GAUDI_PHP_SYMBOL="${GAUDI_PHP_SYMBOL="\\ue608"}"
+GAUDI_PHP_COLOR="${GAUDI_PHP_COLOR="$GAUDI_BLUE"}"
 
 # ------------------------------------------------------------------------------
 # Section
@@ -28,7 +28,8 @@ gaudi_php () {
 
   gaudi::exists php || return
 
-  local php_version=$(php -v 2>&1 | grep --color=never -oe "^PHP\s*[0-9.]\+" | awk '{print $2}')
+  local php_version
+  php_version=$(php -v 2>&1 | grep --color=never -oe "^PHP\s*[0-9.]\+" | awk '{print $2}')
 
   gaudi::section \
     "$GAUDI_PHP_COLOR" \

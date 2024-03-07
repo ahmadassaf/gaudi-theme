@@ -37,7 +37,7 @@ battstat () {
     }
 
     get_linux_details () {
-        battery_details=$(LC_ALL=en_US.UTF-8 upower -i $(upower -e | grep 'BAT'))
+        battery_details=$(LC_ALL=en_US.UTF-8 upower -i "$(upower -e | grep 'BAT')")
 
         # Exit if no batery exists.
         if [[ -z "$battery_details" ]]; then
@@ -201,19 +201,19 @@ battstat () {
             shift
             shift
             ;;
-        {b})
+        '{b}')
             print_background
             shift
             ;;
-        {i})
+        '{i}')
             print_icon
             shift
             ;;
-        {t})
+        '{t}')
             print_time
             shift
             ;;
-        {p})
+        '{p}')
             print_percent
             shift
             ;;

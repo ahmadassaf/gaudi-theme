@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# shellcheck shell=bash
+# shellcheck disable=SC2128,SC1090,SC2154
 
 # Check if command exists in $PATH
 # USAGE:
